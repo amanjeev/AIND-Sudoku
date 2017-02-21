@@ -3,11 +3,19 @@
 
 # Question 1 (Naked Twins)
 Q: How do we use constraint propagation to solve the naked twins problem?  
-A: *Student should provide answer here*
+A: Constraint propagation: the process of finding a solution to a set of constraints that impose conditions that the variables must satisfy. ~ Wikipedia
+
+So in this case, we have to find the constraints and then get the values that satisfy those constraints.
+
+Constaints: 1 unit at a time, naked twins (2 pair), elements with length > 1 which are not the twins
+
+Propagation: This is about finding a twin pair of numbers in a unit, from all the unitlists. Once you have the twins and you have the elements of the unit which are greater than 1 in length, you can eliminate the numbers that are in the twins but exist in other boxes as well. Continue on to the other unit in the unitlist.
+
 
 # Question 2 (Diagonal Sudoku)
 Q: How do we use constraint propagation to solve the diagonal sudoku problem?  
-A: *Student should provide answer here*
+A: Add two diagonal units to the existing list of units. Just like a row or column constraint, the constraint here becomes the diagonal element list.
+
 
 ### Install
 

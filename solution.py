@@ -26,26 +26,30 @@ def naked_twins(values):
 
     # Find all instances of naked twins
     # Eliminate the naked twins as possibilities for their peers
-    for single_unit in unitlist:
+
+    for single_unit in unitlist:  # start with all the unit lists, one at a time
+        # a dict that keeps a trak of the counts of duplicates
+        # and which boxes it pertains to
         count_dict = {values[x]: {'count': 0, 'box': []} for x in single_unit}
-        for box in single_unit:
+        for box in single_unit:  # travers over each box in this unit
             if len(values[box]) == 2:
-                count_dict[values[box]]['count'] += 1
-                count_dict[values[box]]['box'].append(box)
+                count_dict[values[box]]['count'] += 1  # update count for the box value
+                count_dict[values[box]]['box'].append(box)  # update the box number
 
-        count_boxes = [count_dict[k]['box'] for k, v in count_dict.items() if
-                       count_dict[k]['count'] == 2]
-        count_vals = [k for k, v in count_dict.items() if count_dict[k]['count'] == 2]
+        count_twins = [count_dict[k]['box'] for k, v in count_dict.items() if
+                       count_dict[k]['count'] == 2]  # get the boxes with count = 2
         import itertools
-        chain = itertools.chain(*count_boxes)
-        count_boxes = list(chain)
+        chain = itertools.chain(*count_twins)  # flatten the list [[a, b]] => [a, b]
+        count_twins = list(chain)
+        count_vals = [k for k, v in count_dict.items() if count_dict[k]['count'] == 2]  # vals
 
-        if len(count_boxes) > 0:
-            for box in single_unit:
-                if box not in count_boxes and len(values[box]) > 2:
+        if len(count_twins) > 0:
+            for box in single_unit:  # travers again, to remove elements
+                # do only boxes that are not the twins
+                if box not in count_twins and len(values[box]) > 2:
                     for el in count_vals:
                         for digit in el:
-                            values[box] = values[box].replace(digit, '')
+                            values[box] = values[box].replace(digit, '')  # replace each digit
     return values
 
 
