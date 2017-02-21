@@ -26,6 +26,26 @@ def naked_twins(values):
 
     # Find all instances of naked twins
     # Eliminate the naked twins as possibilities for their peers
+    for single_unit in unitlist:
+        count_dict = {values[x]: {'count': 0, 'box': []} for x in single_unit}
+        for box in single_unit:
+            if len(values[box]) == 2:
+                count_dict[values[box]]['count'] += 1
+                count_dict[values[box]]['box'].append(box)
+
+        count_boxes = [count_dict[k]['box'] for k, v in count_dict.items() if count_dict[k]['count'] == 2]
+        count_vals = [k for k, v in count_dict.items() if count_dict[k]['count'] == 2]
+        import itertools
+        chain = itertools.chain(*count_boxes)
+        count_boxes = list(chain)
+
+        if len(count_boxes) > 0:
+            for box in single_unit:
+                if box not in count_boxes and len(values[box]) > 2:
+                    for el in count_vals:
+                        for digit in el:
+                            values[box] = values[box].replace(digit, '')
+    return values
 
 
 def cross(A, B):
@@ -37,8 +57,10 @@ boxes = cross(rows, cols)
 row_units = [cross(r, cols) for r in rows]
 column_units = [cross(rows, c) for c in cols]
 square_units = [cross(rs, cs) for rs in ('ABC', 'DEF', 'GHI') for cs in ('123', '456', '789')]
-diag_units = [[s[0] + s[1] for s in list(zip(rows, cols))],
-              [s[0] + s[1] for s in list(zip(rows, cols[::-1]))]]
+# to solve the diagonal we just need to add units for diagonals
+# of the grid like the following -
+diag_units = [[s[0] + s[1] for s in list(zip(rows, cols))],  # A1 to I9
+              [s[0] + s[1] for s in list(zip(rows, cols[::-1]))]]  # I1 to A9
 unitlist = row_units + column_units + square_units + diag_units
 units = dict((s, [u for u in unitlist if s in u]) for s in boxes)
 peers = dict((s, set(sum(units[s], [])) - set([s])) for s in boxes)

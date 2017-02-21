@@ -68,6 +68,16 @@ class TestNakedTwins(unittest.TestCase):
     ]
 
     def test_naked_twins(self):
+        # solution.display(self.before_naked_twins_1)
+        # print("\n\n")
+        # naked = solution.naked_twins(self.before_naked_twins_1)
+        # solution.display(naked)
+        # print("\n\n")
+        # naked2 = solution.naked_twins(naked)
+        # solution.display(naked)
+        # print("\n\n")
+        # naked3 = solution.naked_twins(naked2)
+        # solution.display(naked3)
         self.assertTrue(solution.naked_twins(self.before_naked_twins_1) in self.possible_solutions_1,
                         "Your naked_twins function produced an unexpected board.")
 
