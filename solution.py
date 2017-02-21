@@ -33,7 +33,8 @@ def naked_twins(values):
                 count_dict[values[box]]['count'] += 1
                 count_dict[values[box]]['box'].append(box)
 
-        count_boxes = [count_dict[k]['box'] for k, v in count_dict.items() if count_dict[k]['count'] == 2]
+        count_boxes = [count_dict[k]['box'] for k, v in count_dict.items() if
+                       count_dict[k]['count'] == 2]
         count_vals = [k for k, v in count_dict.items() if count_dict[k]['count'] == 2]
         import itertools
         chain = itertools.chain(*count_boxes)
