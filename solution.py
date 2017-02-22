@@ -1,7 +1,7 @@
-assignments = []
+import itertools
+from utils import rows, cols, boxes, unitlist, peers
 
-rows = 'ABCDEFGHI'
-cols = '123456789'
+assignments = []
 
 
 def assign_value(values, box, value):
@@ -12,6 +12,47 @@ def assign_value(values, box, value):
     values[box] = value
     if len(value) == 1:
         assignments.append(values.copy())
+    return values
+
+
+def get_counts(values, single_unit):
+    """
+    get the counts of twins and their values to help in naked_twins
+    :param values: value dictionary
+    :param single_unit: a unit of boxes
+    :return: a tuple of counts of twins and values
+    """
+    # a dict that keeps a trak of the counts of duplicates
+    # and which boxes it pertains to
+    count_dict = {values[x]: {'count': 0, 'box': []} for x in single_unit}
+    for box in single_unit:  # travers over each box in this unit
+        if len(values[box]) == 2:
+            count_dict[values[box]]['count'] += 1  # update count for the box value
+            count_dict[values[box]]['box'].append(box)  # update the box number
+
+    count_twins = [count_dict[k]['box'] for k, v in count_dict.items() if
+                   count_dict[k]['count'] == 2]  # get the boxes with count = 2
+
+    chain = itertools.chain(*count_twins)  # flatten the list [[a, b]] => [a, b]
+    count_twins = list(chain)
+    count_vals = [k for k, v in count_dict.items() if count_dict[k]['count'] == 2]  # vals
+    return (count_twins, count_vals)
+
+
+def replace_twin_digits(values, single_unit, count_twins, count_vals):
+    """
+    replaces the digits in other bozxes given the twins' digits
+    :param values: value dictionary
+    :param single_unit: a unit of boxes
+    :return: values dictionary updated digits removal
+    """
+    if len(count_twins) > 0:
+        for box in single_unit:  # traverse again, to remove elements
+            # do only boxes that are not the twins
+            if box not in count_twins and len(values[box]) > 2:
+                for el in count_vals:
+                    for digit in el:
+                        values[box] = values[box].replace(digit, '')  # replace each digit
     return values
 
 
@@ -28,47 +69,9 @@ def naked_twins(values):
     # Eliminate the naked twins as possibilities for their peers
 
     for single_unit in unitlist:  # start with all the unit lists, one at a time
-        # a dict that keeps a trak of the counts of duplicates
-        # and which boxes it pertains to
-        count_dict = {values[x]: {'count': 0, 'box': []} for x in single_unit}
-        for box in single_unit:  # travers over each box in this unit
-            if len(values[box]) == 2:
-                count_dict[values[box]]['count'] += 1  # update count for the box value
-                count_dict[values[box]]['box'].append(box)  # update the box number
-
-        count_twins = [count_dict[k]['box'] for k, v in count_dict.items() if
-                       count_dict[k]['count'] == 2]  # get the boxes with count = 2
-        import itertools
-        chain = itertools.chain(*count_twins)  # flatten the list [[a, b]] => [a, b]
-        count_twins = list(chain)
-        count_vals = [k for k, v in count_dict.items() if count_dict[k]['count'] == 2]  # vals
-
-        if len(count_twins) > 0:
-            for box in single_unit:  # travers again, to remove elements
-                # do only boxes that are not the twins
-                if box not in count_twins and len(values[box]) > 2:
-                    for el in count_vals:
-                        for digit in el:
-                            values[box] = values[box].replace(digit, '')  # replace each digit
+        (count_twins, count_vals) = get_counts(values, single_unit)
+        values = replace_twin_digits(values, single_unit, count_twins, count_vals)
     return values
-
-
-def cross(A, B):
-    "Cross product of elements in A and elements in B."
-    return [s + t for s in A for t in B]
-
-
-boxes = cross(rows, cols)
-row_units = [cross(r, cols) for r in rows]
-column_units = [cross(rows, c) for c in cols]
-square_units = [cross(rs, cs) for rs in ('ABC', 'DEF', 'GHI') for cs in ('123', '456', '789')]
-# to solve the diagonal we just need to add units for diagonals
-# of the grid like the following -
-diag_units = [[s[0] + s[1] for s in list(zip(rows, cols))],  # A1 to I9
-              [s[0] + s[1] for s in list(zip(rows, cols[::-1]))]]  # I1 to A9
-unitlist = row_units + column_units + square_units + diag_units
-units = dict((s, [u for u in unitlist if s in u]) for s in boxes)
-peers = dict((s, set(sum(units[s], [])) - set([s])) for s in boxes)
 
 
 def grid_values(grid):
@@ -107,6 +110,16 @@ def display(values):
 
 
 def eliminate(values):
+    """Eliminate values from peers of each box with a single value.
+
+        Go through all the boxes, and whenever there is a box with a single value,
+        eliminate this value from the set of values of all its peers.
+
+        Args:
+            values: Sudoku in dictionary form.
+        Returns:
+            Resulting Sudoku in dictionary form after eliminating values.
+    """
     single_items = []
     for k, v in values.items():  # store all single items first
         if len(v) == 1:
@@ -118,6 +131,14 @@ def eliminate(values):
 
 
 def only_choice(values):
+    """Finalize all values that are the only choice for a unit.
+
+        Go through all the units, and whenever there is a unit with a value
+        that only fits in one box, assign the value to this box.
+
+        Input: Sudoku in dictionary form.
+        Output: Resulting Sudoku in dictionary form after filling in only choices.
+    """
     for single_unit in unitlist:
         for d in '123456789':
             dp = [box for box in single_unit if d in values[box]]
@@ -138,6 +159,9 @@ def reduce_puzzle(values):
         # Your code here: Use the Only Choice Strategy
         values = only_choice(values)
 
+        #  Use naked twins strategy
+        values = naked_twins(values)
+
         # Check how many boxes have a determined value, to compare
         solved_values_after = len([box for box in values.keys() if len(values[box]) == 1])
         # If no new values were added, stop the loop.
@@ -149,6 +173,12 @@ def reduce_puzzle(values):
 
 
 def search(values):
+    """
+    perform the actual search, recursively using depth-first search and propagation,
+    create a search tree and solve the sudoku.
+    :param values: the values boxes dictionary
+    :return:
+    """
     values = reduce_puzzle(values)
 
     # Choose one of the unfilled squares with the fewest possibilities
@@ -185,13 +215,13 @@ if __name__ == '__main__':
     diag_sudoku_grid = '2.............62....1....7...6..8...3...9...7...6..4...4....8....52.............3'
     display(solve(diag_sudoku_grid))
 
-    # try:
-    #     from visualize import visualize_assignments
-    #
-    #     visualize_assignments(assignments)
-    #
-    # except SystemExit:
-    #     pass
-    # except:
-    #     print(
-    #         'We could not visualize your board due to a pygame issue. Not a problem! It is not a requirement.')
+    try:
+        from visualize import visualize_assignments
+
+        visualize_assignments(assignments)
+
+    except SystemExit:
+        pass
+    except:
+        print(
+            'We could not visualize your board due to a pygame issue. Not a problem! It is not a requirement.')
